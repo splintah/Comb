@@ -7,6 +7,8 @@ For example, when parsing many symbols `'a'` and then the token `"apple"`;
 the parser would look something like:
 
 ```haskell
+import Comb
+
 aapple :: Parser Char (String, String)
 aapple = do as    <- many (symbol 'a')
             apple <- token "apple"
@@ -14,6 +16,20 @@ aapple = do as    <- many (symbol 'a')
 ```
 
 Because of the usage of lists, this parser is not greedy, and `parse aapple "aaapple"` returns `("aa", "apple")`, instead of failing because the first `'a'` of apple was already consumed.
+
+## Usage
+
+Add Comb as a dependency to your project.
+Then put the following atop of the file using Comb.
+
+```haskell
+import Comb
+```
+
+## Documentation
+
+Haddock documentation is available;
+run `stack haddock` in this repository to create the mark-up.
 
 ## Examples
 
