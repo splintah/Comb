@@ -1,4 +1,4 @@
-# Comb
+# Comb [![Build Status](https://travis-ci.org/splintah/Comb.svg?branch=master)](https://travis-ci.org/splintah/Comb)
 
 Comb is a monadic parser combinator library for Haskell.
 Lists are used for monadic context, which allows getting the entire parse tree (and not just the greedy left-most derivation).
