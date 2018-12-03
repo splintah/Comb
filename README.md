@@ -42,7 +42,7 @@ the parser supports the following operations:
 * multiplication (`*`), and
 * division (`/`).
 
-The grammar for such an expressions is:
+The grammar for such expressions is:
 
 ```ebnf
 Expr   ::= Term '+' Expr
