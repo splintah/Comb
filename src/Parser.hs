@@ -13,26 +13,26 @@ import Control.Applicative (Alternative (..))
 newtype Parser s a = Parser { parse :: [s] -> [(a, [s])] }
 
 parserMap :: (a -> b) -> Parser s a -> Parser s b
-parserMap f p = Parser parser
-  where
-    parser xs = fmap (\(x, ys) -> (f x, ys)) $ parse p xs
+parserMap f p = Parser $ \xs ->
+  do (x, ys) <- parse p xs
+     return (f x, ys)
 
 parserReturn :: a -> Parser s a
-parserReturn x = Parser $ \xs -> [(x, xs)]
+parserReturn x = Parser $ \xs -> return (x, xs)
 
 parserBind :: Parser s a -> (a -> Parser s b) -> Parser s b
 parserBind p f = Parser $ \xs ->
-  concatMap (\(x, ys) -> parse (f x) ys) $ parse p xs
+  do (x, ys) <- parse p xs
+     parse (f x) ys
 
 parserCombine :: Parser s (a -> b) -> Parser s a -> Parser s b
 parserCombine p q = Parser $ \xs ->
-  [ (f x, zs)
-  | (f, ys) <- parse p xs
-  , (x, zs) <- parse q ys
-  ]
+  do (f, ys) <- parse p xs
+     (x, zs) <- parse q ys
+     return (f x, zs)
 
 parserAlternative :: Parser s a -> Parser s a -> Parser s a
-parserAlternative p q = Parser $ \xs -> parse p xs ++ parse q xs
+parserAlternative p q = Parser $ \xs -> parse p xs <|> parse q xs
 
 instance Functor (Parser s) where
   fmap = parserMap
