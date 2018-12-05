@@ -2,7 +2,7 @@
 -- (monadic) classes.
 module Parser
   ( Parser (..)
-  , Alternative ((<|>), empty) -- Export Alternative's (<|>), to minimalise the number of imports.
+  , Alternative ((<|>)) -- Export Alternative's (<|>), to minimalise the number of imports.
   ) where
 
 import Control.Applicative (Alternative (..))
