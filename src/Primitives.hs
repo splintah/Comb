@@ -1,78 +1,79 @@
 -- |'Primitives' exports some primitive parser functions.
 module Primitives where
 
+import Control.Applicative (Alternative (..))
 import Data.Char (isDigit, isSpace, isLetter, isLower, isUpper)
 import Parser
 
 -- |Parse an 's' that satisfies the predicate.
 --
 -- Grammar: \(\mathit{satisfy\ p} \rightarrow \{x\ |\ p(x)\}\)
-satisfy :: (s -> Bool) -> Parser s s
+satisfy :: (Monad m, Alternative m) => (s -> Bool) -> Parser s m s
 satisfy p = Parser parser
   where
-    parser [] = []
+    parser [] = empty
     parser (x:xs)
-      | p x       = [(x, xs)]
-      | otherwise = []
+      | p x       = return (x, xs)
+      | otherwise = empty
 
 -- |Parse an 's' that equals the argument.
-symbol :: Eq s => s -> Parser s s
+symbol :: (Monad m, Alternative m, Eq s) => s -> Parser s m s
 symbol a = satisfy (== a)
 
 -- |Parse a string of 's' that equals the argument.
-token :: Eq s => [s] -> Parser s [s]
+token :: (Monad m, Alternative m, Eq s) => [s] -> Parser s m [s]
 token k = Parser parser
   where
     n = length k
     parser xs
-      | k == take n xs = [(k, drop n xs)]
-      | otherwise      = []
+      | k == take n xs = return (k, drop n xs)
+      | otherwise      = empty
 
 -- |Parse zero or more occurrences of the parser.
 --
 -- Grammar: \(\mathit{many\ p} \rightarrow \mathit{p}^*\).
-many :: Parser s a -> Parser s [a]
-many p =  do x  <- p      -- parse trees of p
-             ys <- many p -- list of parse trees of many p
+many :: (Monad m, Alternative m) => Parser s m a -> Parser s m [a]
+many p =  do x  <- p
+             ys <- Primitives.many p
              return $ x : ys
-      <|> return []
+      <|> return empty
 
 -- |Parse any element of type 's'.
-any :: Parser s s
+any :: (Monad m, Alternative m) => Parser s m s
 any = satisfy (const True)
 
 -- |Parse one or more occurrences of the parser.
 --
 -- Grammar: \(\mathit{many\ p} \rightarrow \mathit{p}^+\)
-many1 :: Parser s a -> Parser s [a]
+many1 :: (Monad m, Alternative m) => Parser s m a -> Parser s m [a]
 many1 p = do x  <- p
-             ys <- many p
+             ys <- Primitives.many p
              return $ x : ys
 
 -- |Parse an expression or return a constant value when the parser fails.
-option :: Parser s a -> a -> Parser s a
+option :: (Monad m, Alternative m) => Parser s m a -> a -> Parser s m a
 option p d = p <|> return d
 
 -- |Replace the returned value of the parser with a constant.
-replace :: b -> Parser s a -> Parser s b
+replace :: (Monad m) => b -> Parser s m a -> Parser s m b
 replace x p = const x <$> p
 
 -- |Same as 'replace', but with its arguments flipped, which is useful for,
 -- for example: @symbol \'+\' \`replaceWith\` (+)@.
-replaceWith :: Parser s a -> b -> Parser s b
+replaceWith :: (Monad m) => Parser s m a -> b -> Parser s m b
 replaceWith = flip replace
 
 -- |An element of the given list.
 --
 -- Grammar: \(\mathit{oneOf\ xs} \rightarrow \{\mathit{x}\ |\ \mathit{x} \in \mathit{xs}\}\)
-oneOf :: Eq s => [s] -> Parser s s
+oneOf :: (Monad m, Alternative m, Eq s) => [s] -> Parser s m s
 oneOf xs = satisfy (`elem` xs)
 
 -- |Parse an expression with the parser @p@ between two (other) expressions,
 -- returning the value of @p@.
 --
 -- Grammar: \(\mathit{between\ open\ close\ p} \rightarrow \mathit{open\ p\ close}\)
-between :: Parser s open -> Parser s close -> Parser s a -> Parser s a
+between :: (Monad m) => Parser s m close -> Parser s m open -> Parser s m a -> Parser s m a
 between open close p = do open
                           x <- p
                           close
@@ -81,15 +82,15 @@ between open close p = do open
 -- |Parse a list of parser @p@, seperated by parser @sep@.
 --
 -- Grammar: \(\mathit{sepBy\ sep\ p} \rightarrow \mathit{p}\ (\mathit{sep\ p})^*\)
-sepBy :: Parser s sep -> Parser s a -> Parser s [a]
+sepBy :: (Monad m, Alternative m) => Parser s m sep -> Parser s m a -> Parser s m [a]
 sepBy sep p = do x    <- p
-                 rest <- many $
+                 rest <- Primitives.many $
                    do sep
                       p
                  return $ x : rest
 
 -- |Only evaluate the first parse tree, which is the left-most derivation.
-first :: Parser s a -> Parser s a
+first :: Parser s [] a -> Parser s [] a
 first p = Parser $ f <$> parse p
   where
     f []    = []
@@ -97,52 +98,52 @@ first p = Parser $ f <$> parse p
 
 -- |'first' applied to 'many'; this takes only as much of a parser @p@ as
 -- possible, and does not evaluate the other parse trees.
-greedy :: Parser s a -> Parser s [a]
-greedy = first . many
+greedy :: Parser s [] a -> Parser s [] [a]
+greedy = first . Primitives.many
 
 -- |'first' applied to 'many1'; this takes only as much of a parser @p@ as
 -- possible, and does not evaluate the other parse trees.
-greedy1 :: Parser s a -> Parser s [a]
+greedy1 :: Parser s [] a -> Parser s [] [a]
 greedy1 = first . many1
 
 -- |Parse a digit, a 'Char' that satisfies 'isDigit'.
-digit :: Parser Char Char
+digit :: (Monad m, Alternative m) => Parser Char m Char
 digit = satisfy isDigit
 
 -- |Parse any whitespace, a 'Char' that satisfies 'isSpace'.
-space :: Parser Char Char
+space :: (Monad m, Alternative m) => Parser Char m Char
 space = satisfy isSpace
 
 -- |Parse a letter, a 'Char' that satisfies 'isLetter'.
-letter :: Parser Char Char
+letter :: (Monad m, Alternative m) => Parser Char m Char
 letter = satisfy isLetter
 
 -- |Parse a lowercase 'Char', which satisfies 'isLower'.
-lowercase :: Parser Char Char
+lowercase :: (Monad m, Alternative m) => Parser Char m Char
 lowercase = satisfy isLower
 
 -- |Parse an uppercase 'Char', which satisfies 'isUpper'.
-uppercase :: Parser Char Char
+uppercase :: (Monad m, Alternative m) => Parser Char m Char
 uppercase = satisfy isUpper
 
 -- |Parse an 'Int', consisting of only digits (no negative sign, nor exponents, etc.).
-int :: Parser Char Int
+int :: (Monad m, Alternative m) => Parser Char m Int
 int = read <$> many1 digit
 
 -- |Parse an 'Integer', consisting of only digits (no negative sign, nor exponents, etc.).
-integer :: Parser Char Integer
+integer :: (Monad m, Alternative m) => Parser Char m Integer
 integer = read <$> many1 digit
 
 -- |Parse an expression between parentheses (@'('@ and @')'@).
-parenthesised :: Parser Char a -> Parser Char a
+parenthesised :: (Monad m, Alternative m) => Parser Char m a -> Parser Char m a
 parenthesised = between (symbol '(') (symbol ')')
 
 -- |Parse an expression between brackets (@'['@ and @']'@).
-bracketed :: Parser Char a -> Parser Char a
+bracketed :: (Monad m, Alternative m) => Parser Char m a -> Parser Char m a
 bracketed = between (symbol '[') (symbol ']')
 
 -- |Parse an expression between brackets (@'{'@ and @'}'@).
-braced :: Parser Char a -> Parser Char a
+braced :: (Monad m, Alternative m) => Parser Char m a -> Parser Char m a
 braced = between (symbol '{') (symbol '}')
 
 -- |Parse @many1 expr@ seperated by @op@, @foldr@'d by the operation that the
@@ -158,9 +159,9 @@ braced = between (symbol '{') (symbol '}')
 --     ==
 --   [(Con 1 :+: (Con 2 :+: Con 3), "")]
 -- @
-chainr :: Parser s a -> Parser s (a -> a -> a) -> Parser s a
+chainr :: (Monad m, Alternative m) => Parser s m a -> Parser s m (a -> a -> a) -> Parser s m a
 chainr pe po =
-  do rest <- many $
+  do rest <- Primitives.many $
        do e <- pe
           o <- po
           return (e `o`)
@@ -180,11 +181,19 @@ chainr pe po =
 --     ==
 --   [((Con 1 :+: Con 2) :+: Con 3, "")]
 -- @
-chainl :: Parser s a -> Parser s (a -> a -> a) -> Parser s a
+chainl :: (Monad m, Alternative m) => Parser s m a -> Parser s m (a -> a -> a) -> Parser s m a
 chainl pe po =
   do expr <- pe
-     rest <- many $
+     rest <- Primitives.many $
        do o <- po
           e <- pe
           return (`o` e)
      return $ foldl (flip ($)) expr rest
+
+-- |Only return a successful value when the input is consumed.
+complete :: (Monad m, Alternative m) => Parser s m a -> Parser s m a
+complete p = Parser $ \xs ->
+  do x@(_, ys) <- parse p xs
+     if null ys
+        then return x
+        else empty
