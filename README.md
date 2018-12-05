@@ -17,7 +17,7 @@ aapple = do as    <- many (symbol 'a')
             return (as, apple)
 ```
 
-Because of the usage of lists, this parser is not greedy, and `parse aapple "aaapple"` returns `Just (("aa", "apple"), "")` (the second value in the tuple is the rest of the input), instead of failing because the first `'a'` of apple was already consumed.
+This parser is not greedy, as `parse aapple "aaapple"` returns `Just (("aa", "apple"), "")` (the second value in the tuple is the rest of the input), instead of failing because the first `'a'` of apple was already consumed.
 
 ## Usage
 
