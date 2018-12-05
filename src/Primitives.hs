@@ -78,7 +78,6 @@ between open close p = do open
                           close
                           return x
 
--- SepBy -> P (Sep P)*
 -- |Parse a list of parser @p@, seperated by parser @sep@.
 --
 -- Grammar: \(\mathit{sepBy\ sep\ p} \rightarrow \mathit{p}\ (\mathit{sep\ p})^*\)
