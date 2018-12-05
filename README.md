@@ -9,13 +9,13 @@ the parser would look something like:
 ```haskell
 import Comb
 
-aapple :: Parser Char (String, String)
+aapple :: Parser Char Maybe (String, String)
 aapple = do as    <- many (symbol 'a')
             apple <- token "apple"
             return (as, apple)
 ```
 
-Because of the usage of lists, this parser is not greedy, and `parse aapple "aaapple"` returns `("aa", "apple")`, instead of failing because the first `'a'` of apple was already consumed.
+Because of the usage of lists, this parser is not greedy, and `parse aapple "aaapple"` returns `Just (("aa", "apple"), "")` (the second value in the tuple is the rest of the input), instead of failing because the first `'a'` of apple was already consumed.
 
 ## Usage
 
