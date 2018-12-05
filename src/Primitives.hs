@@ -149,13 +149,13 @@ braced = between (symbol '{') (symbol '}')
 -- |Parse @many1 expr@ seperated by @op@, @foldr@'d by the operation that the
 -- parser @op@ returns.
 --
--- Example:
+-- ==== __Example__
 --
 -- @
 --   data Expr = Con Int
 --             | Expr :+: Expr
 --
---   parse (first \$ chainr (Con \<\$\> int) (symbol \'+\' \`replaceWith\` (:+:))) "1+2+3"
+--   'parse' ('first' \$ 'chainr' (Con \<\$\> 'int') ('symbol' \'+\' \`replaceWith\` (:+:))) "1+2+3"
 --     ==
 --   [(Con 1 :+: (Con 2 :+: Con 3), "")]
 -- @
@@ -171,13 +171,13 @@ chainr pe po =
 -- |Parse @many1 expr@ seperated by @op@, @foldl@'d by the operation that the
 -- parser @op@ returns.
 --
--- Example:
+-- ==== __Example__
 --
 -- @
 --   data Expr = Con Int
 --             | Expr :+: Expr
 --
---   parse (first \$ chainl (Con \<\$\> int) (symbol \'+\' \`replaceWith\` (:+:))) "1+2+3"
+--   'parse' ('first' \$ 'chainl' (Con \<\$\> 'int') ('symbol' \'+\' \`replaceWith\` (:+:))) "1+2+3"
 --     ==
 --   [((Con 1 :+: Con 2) :+: Con 3, "")]
 -- @
