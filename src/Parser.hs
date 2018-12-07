@@ -5,7 +5,9 @@ module Parser
   , (<|>) -- Export Alternative's (<|>), to minimalise the number of imports.
   ) where
 
-import Control.Applicative (Alternative (..))
+import Control.Applicative
+  ( Alternative (..)
+  )
 
 -- |The type of a parser. 's' is the symbol's type, 'a' the return type, 'm' is
 -- the 'Monad' type. 'parse' is the parse function, which can be used like this:
