@@ -140,16 +140,20 @@ uppercase = satisfy isUpper
 -- |Parse an 'Int', consisting of an optional sign ('+' or '-'; without a sign
 -- '+' is inferred) and 'many1' digits.
 int :: (MonadPlus m) => Parser Char m Int
-int = do sign <- option (symbol '+' <|> symbol '-') '+'
+int = do sign <- option (   symbol '+' `replaceWith` (+)
+                        <|> symbol '-' `replaceWith` (-))
+                        (+)
          digs <- many1 digit
-         return $ read (sign : digs)
+         return $ 0 `sign` (read digs)
 
 -- |Parse an 'Integer', consisting of an optional sign ('+' or '-'; without a
 -- sign '+' is inferred) and 'many1' digits.
 integer :: (MonadPlus m) => Parser Char m Integer
-integer = do sign <- option (symbol '+' <|> symbol '-') '+'
+integer = do sign <- option (   symbol '+' `replaceWith` (+)
+                            <|> symbol '-' `replaceWith` (-))
+                            (+)
              digs <- many1 digit
-             return $ read (sign : digs)
+             return $ 0 `sign` (read digs)
 
 -- |Parse an expression between parentheses (@'('@ and @')'@).
 parenthesised :: (MonadPlus m) => Parser Char m a -> Parser Char m a
