@@ -7,6 +7,10 @@ module Parser
 
 import Control.Applicative
   ( Alternative (..)
+  , Applicative (..)
+  )
+import Control.Monad
+  ( MonadPlus (..)
   )
 
 -- |The type of a parser. 's' is the symbol's type, 'a' the return type, 'm' is
@@ -51,3 +55,12 @@ instance (Monad m, Alternative m) => Alternative (Parser s m) where
 instance (Monad m) => Monad (Parser s m) where
   return = pure
   (>>=) = parserBind
+
+instance (MonadPlus m) => MonadPlus (Parser s m)
+
+instance (Monad m, Semigroup a) => Semigroup (Parser s m a) where
+  p <> q = liftA2 (<>) p q
+
+instance (Monad m, Semigroup a, Monoid a) => Monoid (Parser s m a) where
+  mempty = return mempty
+  mappend = (<>)
