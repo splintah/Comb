@@ -137,13 +137,19 @@ lowercase = satisfy isLower
 uppercase :: (MonadPlus m) => Parser Char m Char
 uppercase = satisfy isUpper
 
--- |Parse an 'Int', consisting of only digits (no negative sign, nor exponents, etc.).
+-- |Parse an 'Int', consisting of an optional sign ('+' or '-'; without a sign
+-- '+' is inferred) and 'many1' digits.
 int :: (MonadPlus m) => Parser Char m Int
-int = read <$> many1 digit
+int = do sign <- option (symbol '+' <|> symbol '-') '+'
+         digs <- many1 digit
+         return $ read (sign : digs)
 
--- |Parse an 'Integer', consisting of only digits (no negative sign, nor exponents, etc.).
+-- |Parse an 'Integer', consisting of an optional sign ('+' or '-'; without a
+-- sign '+' is inferred) and 'many1' digits.
 integer :: (MonadPlus m) => Parser Char m Integer
-integer = read <$> many1 digit
+integer = do sign <- option (symbol '+' <|> symbol '-') '+'
+             digs <- many1 digit
+             return $ read (sign : digs)
 
 -- |Parse an expression between parentheses (@'('@ and @')'@).
 parenthesised :: (MonadPlus m) => Parser Char m a -> Parser Char m a
