@@ -44,4 +44,4 @@ exprInt = chainl termInt ( symbol '+' `replaceWith` (+)
                        <|> symbol '-' `replaceWith` (-))
 
 evalExpr :: String -> Maybe Int
-evalExpr s = fmap fst $ parse (complete exprInt) s
+evalExpr = fmap fst . parse (complete exprInt)
