@@ -59,7 +59,7 @@ instance (Monad m) => Monad (Parser s m) where
 instance (MonadPlus m) => MonadPlus (Parser s m)
 
 instance (Monad m, Semigroup a) => Semigroup (Parser s m a) where
-  p <> q = liftA2 (<>) p q
+  (<>) = liftA2 (<>)
 
 instance (Monad m, Semigroup a, Monoid a) => Monoid (Parser s m a) where
   mempty = return mempty
