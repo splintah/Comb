@@ -57,3 +57,20 @@ Factor ::= Integer
 Integer ::= (Digit)+
 Digit   ::= '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'
 ```
+
+## TODO
+
+The following are plans for features for this library;
+their design is not finished yet:
+
+* Add a way of error handling, preferably with a return type of `Either error (result, [symbol])`:
+  - The type of the parser may become something like:
+    ```haskell
+    newtype Parser s e m a =
+      Parser {
+        parse :: e                 -- error/expected value
+              -> (e -> m (a, [s])) -- error return function
+              -> [s]               -- input
+              -> m (a, [s])        -- output
+        }
+    ```
