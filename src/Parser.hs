@@ -1,4 +1,4 @@
--- |'Parser' contains the parser type: 'Parser', and instances for some
+-- | 'Parser' contains the parser type: 'Parser', and instances for some
 -- (monadic) classes.
 module Parser
   ( Parser (..)
@@ -13,7 +13,7 @@ import Control.Monad
   ( MonadPlus (..)
   )
 
--- |The type of a parser. 's' is the symbol's type, 'a' the return type, 'm' is
+-- | The type of a parser. 's' is the symbol's type, 'a' the return type, 'm' is
 -- the 'Monad' type. 'parse' is the parse function, which can be used like this:
 -- @parse p input@, where @p@ is a parser, and @input@ is the input string of
 -- symbols.
