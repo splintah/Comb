@@ -80,6 +80,14 @@ replaceWith = flip replace
 oneOf :: (MonadPlus m, Eq s) => [s] -> Parser s m s
 oneOf xs = satisfy (`elem` xs)
 
+-- |Parse the end of file. Returns @()@ successfully when the end of file is
+-- reached, and fails otherwise.
+eof :: (MonadPlus m) => Parser s m ()
+eof = Parser parser
+  where
+    parser [] = return ((), [])
+    parser _  = empty
+
 -- |Parse an expression with the parser @p@ between two (other) expressions,
 -- returning the value of @p@.
 --
