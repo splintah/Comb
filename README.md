@@ -74,3 +74,4 @@ their design is not finished yet:
               -> m (a, [s])        -- output
         }
     ```
+  - Add a function `(<?>)`, comparable to Parsec's, that adds/replaces an error message.
