@@ -19,7 +19,7 @@ import Control.Monad
 -- symbols.
 newtype Parser s m a = Parser { parse :: [s] -> m (a, [s]) }
 
-parserMap :: (Monad m, Functor m) => (a -> b) -> Parser s m a -> Parser s m b
+parserMap :: (Monad m) => (a -> b) -> Parser s m a -> Parser s m b
 parserMap f p = Parser $ \xs ->
   do (x, ys) <- parse p xs
      return (f x, ys)
