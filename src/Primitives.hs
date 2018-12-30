@@ -13,6 +13,7 @@ import Data.Char
   , isLetter
   , isLower
   , isUpper
+  , ord
   )
 import Parser
 
@@ -147,11 +148,14 @@ uppercase = satisfy isUpper
 
 -- | Parse an 'Int', consisting of 'many1' digits.
 int :: (MonadPlus m) => Parser Char m Int
-int = fmap read $ many1 digit
+int = foldl (\a b -> a * 10 + (ord b - ord '0')) 0 <$> many1 digit
 
--- | Parse an 'Integer', consisting of 'many1' digits.
-integer :: (MonadPlus m) => Parser Char m Integer
-integer = fmap read $ many1 digit
+-- | Parse an 'Int', consisting of an optional negation sign ('-'), followed by
+-- 'many1' digits.
+integer :: (MonadPlus m) => Parser Char m Int
+integer = do sign <- (symbol '-' `replaceWith` negate) `option` id
+             digs <- int
+             return $ sign digs
 
 -- | Parse an expression between parentheses (@'('@ and @')'@).
 parenthesised :: (MonadPlus m) => Parser Char m a -> Parser Char m a
