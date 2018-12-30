@@ -147,7 +147,7 @@ uppercase = satisfy isUpper
 
 -- | Parse an 'Int', consisting of 'many1' digits.
 int :: (MonadPlus m) => Parser Char m Int
-int = fmap read $ read digs
+int = fmap read $ many1 digs
 
 -- | Parse an 'Integer', consisting of 'many1' digits.
 integer :: (MonadPlus m) => Parser Char m Integer
