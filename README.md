@@ -66,12 +66,13 @@ their design is not finished yet:
 * Add a way of error handling, preferably with a return type of `Either error (result, [symbol])`:
   - The type of the parser may become something like:
     ```haskell
-    newtype Parser s e m a =
-      Parser {
-        parse :: e                 -- error/expected value
-              -> (e -> m (a, [s])) -- error return function
-              -> [s]               -- input
-              -> m (a, [s])        -- output
-        }
+    newtype Parser s e m a
+      = Parser { parse :: ((a, [s]) -> m (a, [s])) -- ok function
+                       -> (e -> m (a, [s]))        -- error function
+                       -> e                        -- error/expected value
+                       -> [s]                      -- input
+                       -> m (a, [s])               -- output
+               }
     ```
+  - With the above type, the bound for `Monad m` can be dropped in most/all cases.
   - Add a function `(<?>)`, comparable to Parsec's, that adds/replaces an error message.
