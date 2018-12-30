@@ -145,23 +145,13 @@ lowercase = satisfy isLower
 uppercase :: (MonadPlus m) => Parser Char m Char
 uppercase = satisfy isUpper
 
--- | Parse an 'Int', consisting of an optional sign ('+' or '-'; without a sign
--- '+' is inferred) and 'many1' digits.
+-- | Parse an 'Int', consisting of 'many1' digits.
 int :: (MonadPlus m) => Parser Char m Int
-int = do sign <- option (   symbol '+' `replaceWith` (+)
-                        <|> symbol '-' `replaceWith` (-))
-                        (+)
-         digs <- many1 digit
-         return $ 0 `sign` (read digs)
+int = fmap read $ read digs
 
--- | Parse an 'Integer', consisting of an optional sign ('+' or '-'; without a
--- sign '+' is inferred) and 'many1' digits.
+-- | Parse an 'Integer', consisting of 'many1' digits.
 integer :: (MonadPlus m) => Parser Char m Integer
-integer = do sign <- option (   symbol '+' `replaceWith` (+)
-                            <|> symbol '-' `replaceWith` (-))
-                            (+)
-             digs <- many1 digit
-             return $ 0 `sign` (read digs)
+integer = fmap read $ many1 digit
 
 -- | Parse an expression between parentheses (@'('@ and @')'@).
 parenthesised :: (MonadPlus m) => Parser Char m a -> Parser Char m a
