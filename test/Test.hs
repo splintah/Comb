@@ -5,7 +5,3 @@ import Arithmetic
 
 main :: IO Counts
 main = runTestTT $ TestList arithmeticTests
-
--- main :: IO ()
--- main = do
---   putStrLn "Hello, world!"
