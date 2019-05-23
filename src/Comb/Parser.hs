@@ -1,3 +1,13 @@
+{-|
+Module      : Comb.Parser
+Description : Definition of 'Parser'
+Copyright   : (C) Splinter Suidman, 2019
+License     : AGPL-3
+
+"Comb.Parser" contains the definition of a 'Parser' and re-exports combinators
+for alternative parsing from the 'Alternative' type class in
+"Control.Applicative".
+-}
 module Comb.Parser
   ( Parser (..)
   , ParserFunctor (..)

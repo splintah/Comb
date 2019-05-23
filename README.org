@@ -45,3 +45,7 @@ specialised error values. For example:
     -- some function when there is no character match
     -- etc.
 #+END_SRC
+
+** Licence
+This project is distributed under terms of the GNU Affero General Public License
+version 3. See the file =LICENSE= for the full text of this licence.

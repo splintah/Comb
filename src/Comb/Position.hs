@@ -1,3 +1,13 @@
+{-|
+Module      : Comb.Position
+Description : Support for keeping track of the position in a file
+Copyright   : (C) Splinter Suidman, 2019
+License     : AGPL-3
+
+"Comb.Position" contains the 'Position' datatype together with the datatype
+'WithPosition', which adds a 'Position' to a 'Stream' and updates it when
+'uncons' is used.
+-}
 module Comb.Position
   ( Position (..)
   , positionBegin

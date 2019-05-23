@@ -1,3 +1,14 @@
+{-|
+Module      : Comb.Stream
+Description : Describes the interface of an input stream
+Copyright   : (C) Splinter Suidman, 2019
+License     : AGPL-3
+
+"Comb.Stream" contains the 'Stream' typeclass with some instances. It describes
+the interface of an input stream that can be used for parsing. A stream instance
+of @s@ is not necessary to run a @Parser f s a@, but most primitive parsers in
+"Comb.Prim" require one.
+-}
 {-# LANGUAGE UndecidableInstances #-}
 module Comb.Stream
   ( Stream(..)

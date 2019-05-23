@@ -1,3 +1,9 @@
+{-|
+Module      : Arithmetic
+Description : Test cases for arithmetic parsing
+Copyright   : (C) Splinter Suidman, 2019
+License     : AGPL-3
+-}
 module Arithmetic
   ( arithmeticTests
   ) where
