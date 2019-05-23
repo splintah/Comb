@@ -48,4 +48,4 @@ specialised error values. For example:
 
 ** Licence
 This project is distributed under terms of the GNU Affero General Public License
-version 3. See the file =LICENSE= for the full text of this licence.
+version 3. See the file [[file:LICENSE]] for the full text of this licence.
