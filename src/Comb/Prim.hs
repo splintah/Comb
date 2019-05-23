@@ -1,3 +1,11 @@
+{-|
+Module      : Comb.Parser
+Description : Primitive parsers
+Copyright   : (C) Splinter Suidman, 2019
+License     : AGPL-3
+
+"Comb.Prim" defines primitive parsers.
+-}
 module Comb.Prim
   ( satisfy
   , many
