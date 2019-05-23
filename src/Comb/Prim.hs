@@ -1,5 +1,5 @@
 {-|
-Module      : Comb.Parser
+Module      : Comb.Prim
 Description : Primitive parsers
 Copyright   : (C) Splinter Suidman, 2019
 License     : AGPL-3
