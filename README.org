@@ -1,0 +1,47 @@
+#+TITLE:  Comb
+#+AUTHOR: Splinter Suidman
+#+LANG:   en
+* Comb
+A parser combinator library.
+
+See the Haddock documentation for information about the various parsers.
+
+** Example
+The following program defines a parser (=expr1=) that parses arithmetic
+expressions, such as =1 + 2 * 3^4 / 3 - 5=, and evaluates them to an =Int=.
+#+BEGIN_SRC haskell
+  import Comb
+
+  expr1 =
+    chainl expr2
+      (  (+) <$ symbol '+'
+     <|> (-) <$ symbol '-')
+  expr2 =
+    chainl expr3
+      (  (*) <$ symbol '*'
+     <|> div <$ symbol '/')
+  expr3 = chainr expr4 ((^) <$ symbol '^')
+  expr4 = many space *> (parenthesised expr1 <|> int) <* many space
+
+  result1 = runParser expr1 "9 + 5 * 3^2" :: Maybe (Int, String)
+  -- >>> Just (54, "")
+#+END_SRC
+
+To keep track of the current position in the file, you can use =WithPosition=:
+#+BEGIN_SRC haskell
+  result2 = runParser expr1 (WithPosition positionBegin "9 + 5 * 3^2") :: Maybe (Int, WithPosition String)
+  -- >>> Just (54, WithPosition { position = Position { line = 1, column = 12, file = Nothing }, stream = "" })
+#+END_SRC
+
+When using a =Functor= different from =Maybe=, =WithPosition= can be used to
+create better error messages.
+
+** Design improvements
+To improve error handling, =empty= (of =Alternative=) could be replaced by more
+specialised error values. For example:
+#+BEGIN_SRC haskell
+  class Applicative f => ParserAlternative f where
+    eof :: f a -- error value when the end of file is reached
+    -- some function when there is no character match
+    -- etc.
+#+END_SRC

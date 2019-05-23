@@ -1,47 +1,85 @@
 module Arithmetic
-  ( Expr (..)
-  , parseExpr
-  , evalExpr
+  ( arithmeticTests
   ) where
 
-import Comb
+import           Comb       hiding (Parser)
+import qualified Comb       as Comb
+import           Test.HUnit
 
-data Expr = Con Int
-          | Expr :+: Expr
-          | Expr :-: Expr
-          | Expr :*: Expr
-          | Expr :/: Expr
-          deriving (Eq, Show)
+arithmeticTests =
+  [ TestLabel "parse addition" $ TestCase $ assertEqual
+      "\"1 + 2 + 3\" -> (1 :+: 2) :+: 3"
+      (parse expr1 "1 + 2 + 3")
+      (Just ((Con 1 :+: Con 2) :+: Con 3))
+  , TestLabel "parse subtraction" $ TestCase $ assertEqual
+      "\"1 - 2 - 3\" -> (1 :-: 2) :-: 3"
+      (parse expr1 "1 - 2 - 3")
+      (Just ((Con 1 :-: Con 2) :-: Con 3))
+  , TestLabel "parse multiplication" $ TestCase $ assertEqual
+      "\"1 * 2 * 3\" -> (1 :*: 2) :*: 3"
+      (parse expr1 "1 * 2 * 3")
+      (Just ((Con 1 :*: Con 2) :*: Con 3))
+  , TestLabel "parse division" $ TestCase $ assertEqual
+      "\"1 / 2 / 3\" -> (1 :/: 2) :/: 3"
+      (parse expr1 "1 / 2 / 3")
+      (Just ((Con 1 :/: Con 2) :/: Con 3))
+  , TestLabel "parse exponentiation" $ TestCase $ assertEqual
+      "\"1 ^ 2 ^ 3\" -> 1 :^: (2 :^: 3)"
+      (parse expr1 "1 ^ 2 ^ 3")
+      (Just (Con 1 :^: (Con 2 :^: Con 3)))
+  , TestLabel "operator precedences" $ TestCase $ assertEqual
+      "\"1 + 2 * 3 ^ 4 / 5 - 6\" -> ((1 :+: ((2 :*: (3 :^: 4)) :/: 5)) :-: 6)"
+      (parse expr1 "1 + 2 * 3 ^ 4 / 5 - 6")
+      (Just ((Con 1 :+: ((Con 2 :*: (Con 3 :^: Con 4)) :/: Con 5)) :-: Con 6))
+  ]
 
--- Parse a factor.
-fact :: Parser Char Maybe Expr
-fact =  Con <$> int
-    <|> parenthesised expr
+type Parser a = Comb.Parser Maybe String a
 
--- Parse a term.
-term :: Parser Char Maybe Expr
-term = chainl fact ( symbol '*' `replaceWith` (:*:)
-                 <|> symbol '/' `replaceWith` (:/:))
+parse :: (Functor f) => Comb.Parser f s a -> s -> f a
+parse p s = fst <$> runParser p s
 
--- Parse an expression.
-expr :: Parser Char Maybe Expr
-expr = chainl term ( symbol '+' `replaceWith` (:+:)
-                 <|> symbol '-' `replaceWith` (:-:))
+infixl 6 :+:, :-:
+infixl 7 :*:, :/:
+infixr 8 :^:
+data Expr
+  = Con Int
+  | Expr :+: Expr
+  | Expr :-: Expr
+  | Expr :*: Expr
+  | Expr :/: Expr
+  | Expr :^: Expr
+  deriving (Show, Eq)
 
-parseExpr :: String -> Maybe Expr
-parseExpr s = fmap fst $ parse expr s
+-- Note: the type of the parsers below is not explicitly typed out, to show the
+-- power of type inference for parser combinators.
+expr1 =
+  chainl expr2
+    (  (:+:) <$ symbol '+'
+   <|> (:-:) <$ symbol '-')
+expr2 =
+  chainl expr3
+    (  (:*:) <$ symbol '*'
+   <|> (:/:) <$ symbol '/')
+expr3 = chainr expr4 ((:^:) <$ symbol '^')
+expr4 = many space *> (parenthesised expr1 <|> Con <$> int) <* many space
 
-factInt :: Parser Char Maybe Int
-factInt =  int
-       <|> parenthesised exprInt
+foldExpr ::
+     (Int -> e)    -- Con
+  -> (e -> e -> e) -- :+:
+  -> (e -> e -> e) -- :-:
+  -> (e -> e -> e) -- :*:
+  -> (e -> e -> e) -- :/:
+  -> (e -> e -> e) -- :^:
+  -> Expr -> e
+foldExpr con add sub mul div pow = fold
+  where
+    fold e = case e of
+      Con i   -> con i
+      a :+: b -> add (fold a) (fold b)
+      a :-: b -> sub (fold a) (fold b)
+      a :*: b -> mul (fold a) (fold b)
+      a :/: b -> div (fold a) (fold b)
+      a :^: b -> pow (fold a) (fold b)
 
-termInt :: Parser Char Maybe Int
-termInt = chainl factInt ( symbol '*' `replaceWith` (*)
-                       <|> symbol '/' `replaceWith` div)
-
-exprInt :: Parser Char Maybe Int
-exprInt = chainl termInt ( symbol '+' `replaceWith` (+)
-                       <|> symbol '-' `replaceWith` (-))
-
-evalExpr :: String -> Maybe Int
-evalExpr = fmap fst . parse (complete exprInt)
+exprEval :: Expr -> Int
+exprEval = foldExpr id (+) (-) (*) div (^)

@@ -1,12 +1,8 @@
--- | Comb is a monadic parser combinator library for Haskell. The monadic
--- context (@m@ in the definition of @'Parser' s m a@) is generic; you can use a
--- list, 'Maybe', or any other type that is an instance of 'Monad' (and, for
--- most primitive combinators, 'MonadPlus'). When using lists, the entire parse
--- tree can be generated.
 module Comb
-  ( module Parser
-  , module Primitives
+  ( module Export
   ) where
 
-import Parser
-import Primitives
+import Comb.Parser   as Export
+import Comb.Position as Export
+import Comb.Prim     as Export
+import Comb.Stream   as Export

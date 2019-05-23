@@ -1,0 +1,44 @@
+cabal-version:       2.4
+name:                Comb
+version:             0.2.0.0
+synopsis:            Parser combinator library
+-- description:
+homepage:            https://github.com/splintah/Comb
+-- bug-reports:
+license:             AGPL-3.0-only
+license-file:        LICENSE
+author:              Splinter Suidman
+-- maintainer:
+copyright:           Copyright 2019 Splinter Suidman
+category:            Text
+extra-source-files:  CHANGELOG.md
+
+library
+  exposed-modules:     Comb,
+                       Comb.Parser,
+                       Comb.Position,
+                       Comb.Prim,
+                       Comb.Stream
+  -- other-modules:
+  default-extensions:  NamedFieldPuns,
+                       OverloadedStrings,
+                       MultiParamTypeClasses,
+                       FunctionalDependencies,
+                       TypeSynonymInstances,
+                       FlexibleInstances,
+                       FlexibleContexts
+  build-depends:       base ^>=4.12.0.0,
+                       text ^>=1.2.0.0,
+                       containers ^>= 0.6.0.0
+  hs-source-dirs:      src
+  default-language:    Haskell2010
+
+test-suite CombTest
+  type:                exitcode-stdio-1.0
+  hs-source-dirs:      test
+  main-is:             Test.hs
+  build-depends:       base ^>=4.12.0.0,
+                       Comb,
+                       HUnit
+  default-language:    Haskell2010
+  other-modules:       Arithmetic
