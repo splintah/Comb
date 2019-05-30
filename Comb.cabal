@@ -42,3 +42,4 @@ test-suite CombTest
                        HUnit
   default-language:    Haskell2010
   other-modules:       Arithmetic
+
