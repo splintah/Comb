@@ -25,6 +25,7 @@ module Comb.Prim
   , first
   , greedy
   , greedy1
+  , greedy1List
   , int
   , betweenSymbols
   , parenthesised
@@ -208,13 +209,23 @@ first p = Parser $ (f . runParser p)
         x:_ -> [x]
         []  -> []
 
--- | 'greedy' is a non-backtracking version of 'many', for @f ~ []@.
-greedy :: Parser [] s a -> Parser [] s [a]
-greedy = first . many
+-- | 'greedy' is a non-backtracking version of 'many', for @GreedyAlternative
+-- f@. The greedy parsers are useful for parsing identifiers or whitespace, for
+-- example. In most grammars, an identifier like @"greedy"@ can only be parsed
+-- as the full identifier, and not as the combination of subsequences like
+-- @"gre"@ and @"edy"@.
+greedy :: (ParserFunctor f, GreedyAlternative f) => Parser f s a -> Parser f s [a]
+greedy p = greedy1List p <||> pure []
 
--- | 'greedy1' is a non-backtracking version of 'many1', for @f ~ []@.
-greedy1 :: Parser [] s a -> Parser [] s [a]
-greedy1 = first . many1List
+-- | 'greedy1' is a non-backtracking version of 'many1', for @GreedyAlternative
+-- f@. See 'greedy' for more information.
+greedy1 :: (ParserFunctor f, GreedyAlternative f) => Parser f s a -> Parser f s (NonEmpty a)
+greedy1 p = (:|) <$> p <*> greedy p
+
+-- | 'greedy1List' is a non-backtracking version of 'many1List', for
+-- @GreedyAlternative f@. See 'greedy' for more information.
+greedy1List :: (ParserFunctor f, GreedyAlternative f) => Parser f s a -> Parser f s [a]
+greedy1List p = NonEmpty.toList <$> greedy1 p
 
 -- | 'int' parses an integer and returns an 'Int'. The integer may consist only
 -- of digits (parsed by 'digit'); leading zeroes are allowed.
