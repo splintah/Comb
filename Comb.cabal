@@ -11,7 +11,7 @@ author:              Splinter Suidman
 -- maintainer:
 copyright:           Copyright 2019 Splinter Suidman
 category:            Text
-extra-source-files:  CHANGELOG.md
+extra-source-files:  ChangeLog.md
 
 library
   exposed-modules:     Comb,
