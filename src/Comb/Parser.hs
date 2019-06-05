@@ -61,8 +61,6 @@ class (Alternative f) => GreedyAlternative f where
   -- '<|>'; but for 'Functor's like @[]@, there is a difference, because the
   -- success value of @[]@ (a non-empty list) can contain multiple success
   -- values.
-  --
-  -- 'empty' should be the identity of '<||>'.
   (<||>) :: f a -> f a -> f a
 
 instance GreedyAlternative Maybe where
