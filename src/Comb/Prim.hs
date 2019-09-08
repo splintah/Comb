@@ -188,16 +188,16 @@ between ::
   -> Parser m s a
 between open close p = open *> p <* close
 
--- | 'sepBy' @sep@ @p@ parses a list of @p@, separated by @sep@.
+-- | 'sepBy' @p@ @sep@ parses a list of @p@, separated by @sep@.
 --
--- >>> runParser (sepBy (symbol ',') alpha) "a,b,c" :: Maybe ([Char], String)
+-- >>> runParser (sepBy alpha (symbol ',')) "a,b,c" :: Maybe ([Char], String)
 -- Just ("abc", [])
 sepBy ::
      (ParserMonad m, Stream s t)
-  => Parser m s sep
-  -> Parser m s a
+  => Parser m s a
+  -> Parser m s sep
   -> Parser m s [a]
-sepBy sep p = (:) <$> p <*> (many (sep *> p))
+sepBy p sep = (:) <$> p <*> (many (sep *> p))
 
 -- | 'first' @p@ only parses the first parse tree when @m ~ []@. This function
 -- is used to speed up parsers that should not backtrack.
