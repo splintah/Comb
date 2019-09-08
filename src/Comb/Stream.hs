@@ -34,10 +34,10 @@ instance Stream String Char where
 instance Stream Text Char where
   uncons = Text.uncons
 
--- | A 'Stream' instance for 'WithPosition' @s@, provided @s@ is a stream of
+-- | A 'Stream' instance for 'Positioned' @s@, provided @s@ is a stream of
 -- @t@, and @t@ is an instance of 'UpdatePosition'.
-instance (Stream s t, UpdatePosition t) => Stream (WithPosition s) t where
-  uncons WithPosition { position, stream } = f <$> uncons stream
+instance (Stream s t, UpdatePosition t) => Stream (Positioned s) t where
+  uncons Positioned { position, stream } = f <$> uncons stream
     where
       f (t, s) =
-        (t, WithPosition { position = updatePosition t position, stream = s })
+        (t, Positioned { position = updatePosition t position, stream = s })

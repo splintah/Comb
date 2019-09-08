@@ -29,11 +29,11 @@ expressions, such as =1 + 2 * 3^4 / 3 - 5=, and evaluates them to an =Int=.
 
 To keep track of the current position in the file, you can use =WithPosition=:
 #+BEGIN_SRC haskell
-  result2 = runParser expr1 (WithPosition positionBegin "9 + 5 * 3^2") :: Maybe (Int, WithPosition String)
-  -- >>> Just (54, WithPosition { position = Position { line = 1, column = 12, file = Nothing }, stream = "" })
+  result2 = runParser expr1 (Positioned positionBegin "9 + 5 * 3^2") :: Maybe (Int, Positioned String)
+  -- >>> Just (54, Positioned { position = Position { line = 1, column = 12, file = Nothing }, stream = "" })
 #+END_SRC
 
-When using a =Functor= different from =Maybe=, =WithPosition= can be used to
+When using a =Functor= different from =Maybe=, =Positioned= can be used to
 create better error messages.
 
 ** Design improvements

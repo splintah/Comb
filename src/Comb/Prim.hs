@@ -69,9 +69,9 @@ import qualified Data.Set           as Set
 -- | 'satisfy' @p@ returns a 'Parser' that recognises a symbol for which @p@
 -- returns 'True'.
 satisfy ::
-     (ParserFunctor f, Stream s t)
+     (ParserMonad m, Stream s t)
   => (t -> Bool)
-  -> Parser f s t
+  -> Parser m s t
 satisfy p =
   Parser $ \xs ->
     case uncons xs of
@@ -80,38 +80,38 @@ satisfy p =
       _ -> empty
 
 -- | 'many' @p@ parses zero or more occurrences of @p@.
-many :: (ParserFunctor f) => Parser f s a -> Parser f s [a]
+many :: (ParserMonad m) => Parser m s a -> Parser m s [a]
 many p = many1List p <|> pure []
 
 -- | 'many1' @p@ parses one or more occurrences of @p@ and returns a 'NonEmpty'
 -- list. For a version that returns a '[]' list, use 'many1List'.
-many1 :: (ParserFunctor f) => Parser f s a -> Parser f s (NonEmpty a)
+many1 :: (ParserMonad m) => Parser m s a -> Parser m s (NonEmpty a)
 many1 p = (:|) <$> p <*> many p
 
 -- | 'many1List' @p@ parses one or more occurrences of @p@ and returns a '[]'
 -- list. For a version that returns a 'NonEmpty' list use 'many1'.
-many1List :: (ParserFunctor f) => Parser f s a -> Parser f s [a]
+many1List :: (ParserMonad m) => Parser m s a -> Parser m s [a]
 many1List p = NonEmpty.toList <$> many1 p
 
 -- | 'symbol' @x@ parses a symbol equal to @x@, using '==' from 'Eq' for
 -- comparison.
-symbol :: (ParserFunctor f, Stream s t, Eq t) => t -> Parser f s t
+symbol :: (ParserMonad m, Stream s t, Eq t) => t -> Parser m s t
 symbol x = satisfy (== x)
 
 -- | 'token' @xs@ parses a list of symbols. See 'symbol' for information about
 -- symbols.
-token :: (ParserFunctor f, Stream s t, Eq t) => [t] -> Parser f s [t]
+token :: (ParserMonad m, Stream s t, Eq t) => [t] -> Parser m s [t]
 token xs =
   case xs of
     x:ys -> (:) <$> symbol x <*> token ys
     []   -> pure []
 
 -- | 'any' parses any symbol.
-any :: (ParserFunctor f, Stream s t) => Parser f s t
+any :: (ParserMonad m, Stream s t) => Parser m s t
 any = satisfy (const True)
 
 -- | 'option' @p@ @d@ parses @p@, and, when @p@ fails, returns @d@.
-option :: (ParserFunctor f) => Parser f s a -> a -> Parser f s a
+option :: (ParserMonad m) => Parser m s a -> a -> Parser m s a
 option p d = p <|> pure d
 
 -- | 'oneOf' @xs@ parses any element of @xs@.
@@ -119,14 +119,14 @@ option p d = p <|> pure d
 -- Note: this is not very fast when @xs@ is large, since it uses 'elem'
 -- (/O(n)/). It would be faster to use 'oneOfSet' (which has a lookup complexity
 -- of /O(log n)/).
-oneOf :: (ParserFunctor f, Stream s t, Eq t) => [t] -> Parser f s t
+oneOf :: (ParserMonad m, Stream s t, Eq t) => [t] -> Parser m s t
 oneOf xs = satisfy (`elem` xs)
 
 -- | 'oneOfSet' @xs@ parses any element of @xs@. 'oneOfSet' is a version of
 -- 'oneOf' that uses a 'Set' instead of a list for element lookup, which is
 -- often faster (/O(log n)/ for a 'Set' versus /O(n)/ for a list). To use
 -- 'oneOfSet', and instance of 'Ord' is necessary.
-oneOfSet :: (ParserFunctor f, Stream s t, Ord t) => Set t -> Parser f s t
+oneOfSet :: (ParserMonad m, Stream s t, Ord t) => Set t -> Parser m s t
 oneOfSet xs = satisfy (`Set.member` xs)
 
 -- | 'chainl' @p@ @s@ parses a list of @p@ separated by a left-associative
@@ -135,10 +135,10 @@ oneOfSet xs = satisfy (`Set.member` xs)
 -- >>> runParser (chainl int ((-) <$ symbol '-')) "20-10-5" :: Maybe (Int, String)
 -- Just (5, "")
 chainl ::
-     (ParserFunctor f)
-  => Parser f s a
-  -> Parser f s (a -> a -> a)
-  -> Parser f s a
+     (ParserMonad m)
+  => Parser m s a
+  -> Parser m s (a -> a -> a)
+  -> Parser m s a
 chainl p s = foldl (flip ($)) <$> p <*> many (ap <$> s <*> p)
   where
     ap :: (a -> b -> c) -> b -> a -> c
@@ -155,10 +155,10 @@ chainl p s = foldl (flip ($)) <$> p <*> many (ap <$> s <*> p)
 -- Note: the operator '+' is associative (right and left), so the above example
 -- could also be written with 'chainl'.
 chainr ::
-     (ParserFunctor f)
-  => Parser f s a
-  -> Parser f s (a -> a -> a)
-  -> Parser f s a
+     (ParserMonad m)
+  => Parser m s a
+  -> Parser m s (a -> a -> a)
+  -> Parser m s a
 chainr p s = flip (foldr ($)) <$> many (ap <$> p <*> s) <*> p
   where
     ap :: a -> (a -> b -> c) -> b -> c
@@ -168,7 +168,7 @@ chainr p s = flip (foldr ($)) <$> many (ap <$> p <*> s) <*> p
 
 -- | 'eof' returns successfully if the end of the stream has been reached.
 -- Otherwise it fails.
-eof :: (ParserFunctor f, Stream s t) => Parser f s ()
+eof :: (ParserMonad m, Stream s t) => Parser m s ()
 eof =
   Parser $ \xs ->
     case uncons xs of
@@ -181,11 +181,11 @@ eof =
 -- Specialised versions of 'between' are 'betweenSymbols', 'parenthesised',
 -- 'bracketed', and 'braced'.
 between ::
-     (ParserFunctor f, Stream s t)
-  => Parser f s open
-  -> Parser f s close
-  -> Parser f s a
-  -> Parser f s a
+     (ParserMonad m, Stream s t)
+  => Parser m s open
+  -> Parser m s close
+  -> Parser m s a
+  -> Parser m s a
 between open close p = open *> p <* close
 
 -- | 'sepBy' @sep@ @p@ parses a list of @p@, separated by @sep@.
@@ -193,13 +193,13 @@ between open close p = open *> p <* close
 -- >>> runParser (sepBy (symbol ',') alpha) "a,b,c" :: Maybe ([Char], String)
 -- Just ("abc", [])
 sepBy ::
-     (ParserFunctor f, Stream s t)
-  => Parser f s sep
-  -> Parser f s a
-  -> Parser f s [a]
+     (ParserMonad m, Stream s t)
+  => Parser m s sep
+  -> Parser m s a
+  -> Parser m s [a]
 sepBy sep p = (:) <$> p <*> (many (sep *> p))
 
--- | 'first' @p@ only parses the first parse tree when @f ~ []@. This function
+-- | 'first' @p@ only parses the first parse tree when @m ~ []@. This function
 -- is used to speed up parsers that should not backtrack.
 first :: Parser [] s a -> Parser [] s a
 first p = Parser $ (f . runParser p)
@@ -210,36 +210,36 @@ first p = Parser $ (f . runParser p)
         []  -> []
 
 -- | 'greedy' is a non-backtracking version of 'many', for @GreedyAlternative
--- f@. The greedy parsers are useful for parsing identifiers or whitespace, for
+-- m@. The greedy parsers are useful for parsing identifiers or whitespace, for
 -- example. In most grammars, an identifier like @"greedy"@ can only be parsed
 -- as the full identifier, and not as the combination of subsequences like
 -- @"gre"@ and @"edy"@.
-greedy :: (ParserFunctor f, GreedyAlternative f) => Parser f s a -> Parser f s [a]
+greedy :: (ParserMonad m, GreedyAlternative m) => Parser m s a -> Parser m s [a]
 greedy p = greedy1List p <||> pure []
 
 -- | 'greedy1' is a non-backtracking version of 'many1', for @GreedyAlternative
--- f@. See 'greedy' for more information.
-greedy1 :: (ParserFunctor f, GreedyAlternative f) => Parser f s a -> Parser f s (NonEmpty a)
+-- m@. See 'greedy' for more information.
+greedy1 :: (ParserMonad m, GreedyAlternative m) => Parser m s a -> Parser m s (NonEmpty a)
 greedy1 p = (:|) <$> p <*> greedy p
 
 -- | 'greedy1List' is a non-backtracking version of 'many1List', for
--- @GreedyAlternative f@. See 'greedy' for more information.
-greedy1List :: (ParserFunctor f, GreedyAlternative f) => Parser f s a -> Parser f s [a]
+-- @GreedyAlternative m@. See 'greedy' for more information.
+greedy1List :: (ParserMonad m, GreedyAlternative m) => Parser m s a -> Parser m s [a]
 greedy1List p = NonEmpty.toList <$> greedy1 p
 
 -- | 'int' parses an integer and returns an 'Int'. The integer may consist only
 -- of digits (parsed by 'digit'); leading zeroes are allowed.
-int :: (ParserFunctor f, Stream s Char) => Parser f s Int
+int :: (ParserMonad m, Stream s Char) => Parser m s Int
 int = foldl (\a b -> a * 10 + digitToInt b) 0 <$> many1 digit
 
 -- | 'betweenSymbols' is a specialised function of 'between'; instead of two
 -- parsers, it accepts to symbols that surround the parser.
 betweenSymbols ::
-     (ParserFunctor f, Stream s t, Eq t)
+     (ParserMonad m, Stream s t, Eq t)
   => t
   -> t
-  -> Parser f s a
-  -> Parser f s a
+  -> Parser m s a
+  -> Parser m s a
 betweenSymbols open close = between (symbol open) (symbol close)
 
 -- | Parse an expression between two parentheses (@(@ and @)@).
@@ -247,110 +247,110 @@ betweenSymbols open close = between (symbol open) (symbol close)
 -- >>> runParser (parenthesised (many alpha)) "(abc)" :: Maybe (String, String)
 -- Just ("abc","")
 parenthesised ::
-     (ParserFunctor f, Stream s Char)
-  => Parser f s a
-  -> Parser f s a
+     (ParserMonad m, Stream s Char)
+  => Parser m s a
+  -> Parser m s a
 parenthesised = betweenSymbols '(' ')'
 
 -- | Parse an expression between two straight brackets (@[@ and @]@).
 --
 -- >>> runParser (bracketed (many alpha)) "[abc]" :: Maybe (String, String)
 -- Just ("abc","")
-bracketed :: (ParserFunctor f, Stream s Char) => Parser f s a -> Parser f s a
+bracketed :: (ParserMonad m, Stream s Char) => Parser m s a -> Parser m s a
 bracketed = betweenSymbols '[' ']'
 
 -- | Parse an expression between two curly braces (@{@ and @}@).
 --
 -- >>> runParser (braced (many alpha)) "{abc}" :: Maybe (String, String)
 -- Just ("abc","")
-braced :: (ParserFunctor f, Stream s Char) => Parser f s a -> Parser f s a
+braced :: (ParserMonad m, Stream s Char) => Parser m s a -> Parser m s a
 braced = betweenSymbols '{' '}'
 
 -- | Parse an expression between two straight double quotes (@"@).
 --
 -- >>> runParser (quoted (many alpha)) "\"abc\"" :: Maybe (String, String)
 -- Just ("abc","")
-quoted :: (ParserFunctor f, Stream s Char) => Parser f s a -> Parser f s a
+quoted :: (ParserMonad m, Stream s Char) => Parser m s a -> Parser m s a
 quoted = betweenSymbols '"' '"'
 
 -- | Parse a character that is recognised by 'isControl'.
-control :: (ParserFunctor f, Stream s Char) => Parser f s Char
+control :: (ParserMonad m, Stream s Char) => Parser m s Char
 control = satisfy isControl
 
 -- | Parse a character that is recognised by 'isSpace'.
-space :: (ParserFunctor f, Stream s Char) => Parser f s Char
+space :: (ParserMonad m, Stream s Char) => Parser m s Char
 space = satisfy isSpace
 
 -- | Parse a character that is recognised by 'isLower'.
-lower :: (ParserFunctor f, Stream s Char) => Parser f s Char
+lower :: (ParserMonad m, Stream s Char) => Parser m s Char
 lower = satisfy isLower
 
 -- | Parse a character that is recognised by 'isUpper'.
-upper :: (ParserFunctor f, Stream s Char) => Parser f s Char
+upper :: (ParserMonad m, Stream s Char) => Parser m s Char
 upper = satisfy isUpper
 
 -- | Parse a character that is recognised by 'isAlpha'.
-alpha :: (ParserFunctor f, Stream s Char) => Parser f s Char
+alpha :: (ParserMonad m, Stream s Char) => Parser m s Char
 alpha = satisfy isAlpha
 
 -- | Parse a character that is recognised by 'isAlphaNum'.
-alphaNum :: (ParserFunctor f, Stream s Char) => Parser f s Char
+alphaNum :: (ParserMonad m, Stream s Char) => Parser m s Char
 alphaNum = satisfy isAlphaNum
 
 -- | Parse a character that is recognised by 'isPrint'.
-print :: (ParserFunctor f, Stream s Char) => Parser f s Char
+print :: (ParserMonad m, Stream s Char) => Parser m s Char
 print = satisfy isPrint
 
 -- | Parse a character that is recognised by 'isDigit'.
-digit :: (ParserFunctor f, Stream s Char) => Parser f s Char
+digit :: (ParserMonad m, Stream s Char) => Parser m s Char
 digit = satisfy isDigit
 
 -- | Parse a character that is recognised by 'isOctDigit'.
-octDigit :: (ParserFunctor f, Stream s Char) => Parser f s Char
+octDigit :: (ParserMonad m, Stream s Char) => Parser m s Char
 octDigit = satisfy isOctDigit
 
 -- | Parse a character that is recognised by 'isHexDigit'.
-hexDigit :: (ParserFunctor f, Stream s Char) => Parser f s Char
+hexDigit :: (ParserMonad m, Stream s Char) => Parser m s Char
 hexDigit = satisfy isHexDigit
 
 -- | Parse a character that is recognised by 'isLetter'.
-letter :: (ParserFunctor f, Stream s Char) => Parser f s Char
+letter :: (ParserMonad m, Stream s Char) => Parser m s Char
 letter = satisfy isLetter
 
 -- | Parse a character that is recognised by 'isMark'.
-mark :: (ParserFunctor f, Stream s Char) => Parser f s Char
+mark :: (ParserMonad m, Stream s Char) => Parser m s Char
 mark = satisfy isMark
 
 -- | Parse a character that is recognised by 'isNumber'.
-number :: (ParserFunctor f, Stream s Char) => Parser f s Char
+number :: (ParserMonad m, Stream s Char) => Parser m s Char
 number = satisfy isNumber
 
 -- | Parse a character that is recognised by 'isPunctuation'.
-punctuation :: (ParserFunctor f, Stream s Char) => Parser f s Char
+punctuation :: (ParserMonad m, Stream s Char) => Parser m s Char
 punctuation = satisfy isPunctuation
 
 -- TODO: name clash with 'symbol' when using the default naming convention for
 -- these functions.
 -- | Parse a character that is recognised by 'isSymbol'.
-unicodeSymbol :: (ParserFunctor f, Stream s Char) => Parser f s Char
+unicodeSymbol :: (ParserMonad m, Stream s Char) => Parser m s Char
 unicodeSymbol = satisfy isSymbol
 
 -- | Parse a character that is recognised by 'isSeparator'.
-separator :: (ParserFunctor f, Stream s Char) => Parser f s Char
+separator :: (ParserMonad m, Stream s Char) => Parser m s Char
 separator = satisfy isSeparator
 
 -- | Parse a character that is recognised by 'isAscii'.
-ascii :: (ParserFunctor f, Stream s Char) => Parser f s Char
+ascii :: (ParserMonad m, Stream s Char) => Parser m s Char
 ascii = satisfy isAscii
 
 -- | Parse a character that is recognised by 'isLatin1'.
-latin1 :: (ParserFunctor f, Stream s Char) => Parser f s Char
+latin1 :: (ParserMonad m, Stream s Char) => Parser m s Char
 latin1 = satisfy isLatin1
 
 -- | Parse a character that is recognised by 'isAsciiUpper'.
-asciiUpper :: (ParserFunctor f, Stream s Char) => Parser f s Char
+asciiUpper :: (ParserMonad m, Stream s Char) => Parser m s Char
 asciiUpper = satisfy isAsciiUpper
 
 -- | Parse a character that is recognised by 'isAsciiLower'.
-asciiLower :: (ParserFunctor f, Stream s Char) => Parser f s Char
+asciiLower :: (ParserMonad m, Stream s Char) => Parser m s Char
 asciiLower = satisfy isAsciiLower
